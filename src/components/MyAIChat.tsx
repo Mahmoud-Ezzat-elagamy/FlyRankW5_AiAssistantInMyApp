@@ -167,7 +167,7 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
         role="dialog"
         aria-label="AI Assistant Chat"
         aria-modal="true"
-        className={`fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[400px] md:w-[440px] bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col transform transition-transform duration-200 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 bottom-0 z-50 w-full sm:w-100 md:w-110 bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col transform transition-transform duration-200 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
         {/* Sidebar Header */}
@@ -261,14 +261,14 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
             </div>
           ))}
 
-          {status === 'streaming' && (
-            <div className="flex items-center gap-2 text-xs text-zinc-400 italic">
+          {(status === 'submitted' || status === 'streaming') && (
+            <div className="flex items-center gap-2 text-xs text-zinc-400 italic py-1">
               <span className="flex space-x-1">
                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </span>
-              AI is typing...
+              {status === 'submitted' ? 'AI is thinking...' : 'AI is typing...'}
             </div>
           )}
 
@@ -284,7 +284,7 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
         {/* Sidebar Footer Input Form (Isolated Component) */}
         <ChatInputForm
           isOpen={isOpen}
-          disabled={status === 'streaming'}
+          disabled={status === 'streaming' || status === 'submitted'}
           onSend={handleSendMessage}
           placeholder="Ask AI anything..."
         />

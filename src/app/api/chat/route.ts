@@ -82,10 +82,13 @@ Rules:
         }),
         removeCard: tool({
           description: 'Remove a card from the UI by its ID',
+          // the input we get from the ai...
+          // the infos the ai execludes from the prompt to be sent back in the response... 
           inputSchema: z.object({
             id: z.string().describe('ID of the card to be removed'),
             title: z.string().optional().describe('Title of the card being removed'),
           }),
+          // the output we send back to the ai after recieving the input to appear in the messages list's parts output ...
           execute: async ({ id, title }) => {
             return {
               id,
