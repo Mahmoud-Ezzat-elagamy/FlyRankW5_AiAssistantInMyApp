@@ -8,7 +8,10 @@ import { card } from '@/app/page';
 
 export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (card: card) => void, cards?: card[], removeCard?: (id: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, sendMessage, status, error } = useChat();
+
+  const { messages, sendMessage, status, error, regenerate } = useChat({ onError: (err) => {
+    console.log("error from useChat is : ", err.message);
+  } });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   console.log(messages)
@@ -62,8 +65,8 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
             const formattedTags = Array.isArray(cardData.tags)
               ? cardData.tags
               : typeof cardData.tags === 'string'
-              ? (cardData.tags as string).split(',').map((t) => t.trim())
-              : [];
+                ? (cardData.tags as string).split(',').map((t) => t.trim())
+                : [];
 
             addCard?.({
               id: cardData.id || crypto.randomUUID(),
@@ -80,10 +83,10 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
   // the logic for deleting card
   useEffect(
     () => {
-      for(const message of messages){
-        if(message.role === 'assistant' && message.parts){
-          for(const part of message.parts){
-            if(part.type === 'tool-removeCard'){
+      for (const message of messages) {
+        if (message.role === 'assistant' && message.parts) {
+          for (const part of message.parts) {
+            if (part.type === 'tool-removeCard') {
               const toolPart = part as {
                 toolCallId?: string;
                 output?: {
@@ -95,7 +98,7 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
               };
               const cardData = toolPart.output || toolPart.input;
               const callId = toolPart.toolCallId as string;
-              if(cardData?.id && !processedToolCallsRef.current.has(callId)){
+              if (cardData?.id && !processedToolCallsRef.current.has(callId)) {
                 processedToolCallsRef.current.add(callId);
                 removeCard?.(cardData.id);
               }
@@ -215,7 +218,7 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
                 </svg>
               </div>
               <h3 className="font-semibold text-zinc-800 dark:text-zinc-200 text-sm">How can I help you today?</h3>
-              <p className="text-xs mt-1 max-w-[240px]">
+              <p className="text-xs mt-1 max-w-60">
                 Ask any question to get started.
               </p>
             </div>
@@ -233,8 +236,8 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
 
               <div
                 className={`max-w-[90%] rounded-2xl p-3 text-sm leading-relaxed ${message.role === 'user'
-                    ? 'bg-blue-600 text-white rounded-tr-xs'
-                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-tl-xs border border-zinc-200/60 dark:border-zinc-700/60'
+                  ? 'bg-blue-600 text-white rounded-tr-xs'
+                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-tl-xs border border-zinc-200/60 dark:border-zinc-700/60'
                   }`}
               >
                 {message.parts?.map((part, i) => {
@@ -275,6 +278,9 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
           {error && (
             <div className="p-3 bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 rounded-xl text-xs border border-red-200 dark:border-red-900">
               Error: {error.message}
+              <button type="button" onClick={() => regenerate()}>
+                Retry
+              </button>
             </div>
           )}
 
@@ -284,7 +290,7 @@ export default function MyAIChat({ addCard, cards, removeCard }: { addCard?: (ca
         {/* Sidebar Footer Input Form (Isolated Component) */}
         <ChatInputForm
           isOpen={isOpen}
-          disabled={status === 'streaming' || status === 'submitted'}
+          disabled={status === 'streaming' || status === 'submitted' || Boolean(error)}
           onSend={handleSendMessage}
           placeholder="Ask AI anything..."
         />

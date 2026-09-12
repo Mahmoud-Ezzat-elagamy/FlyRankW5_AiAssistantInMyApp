@@ -37,6 +37,24 @@ Every tool call lifecycle is rendered as a clean, human-friendly UI block:
 - Built-in SSR safety prevents hydration and pre-rendering issues.
 - Responsive grid supporting desktop, tablet, and mobile layouts with dark mode compatibility.
 
+### 6. 🧠 Managing the `useChat()` State Machine
+The application utilizes the state lifecycle of the Vercel AI SDK's `useChat()` hook to provide an intuitive user experience:
+
+| State (`status`) | Description | How We Handled It in UI |
+| :--- | :--- | :--- |
+| **`'ready'`** | Idle; ready for user input | Chat input form is enabled and ready to accept prompts. |
+| **`'submitted'`** | Message sent; waiting for the model to start responding | Displays bouncing indicator dots with **`AI is thinking...`** and locks the input form. |
+| **`'streaming'`** | Response tokens and tool events are actively arriving | Displays bouncing indicator dots with **`AI is typing...`** and updates tool lifecycle parts live. |
+| **`'error'`** | API or network request failed | Renders a styled alert banner displaying the error message. |
+
+#### 🔍 Why `status` Instead of Checking Last Message Role?
+A common pitfall is checking `messages[messages.length - 1]?.role === 'user'` to show a thinking loader. However, as soon as `sendMessage()` is executed, the AI SDK immediately appends an empty assistant message `{ role: 'assistant', parts: [] }` in anticipation of the stream. Thus, the last message's role is never `'user'` during the wait phase.
+
+By explicitly checking `(status === 'submitted' || status === 'streaming')`:
+1. **Immediate Feedback**: The user instantly sees **"AI is thinking..."** the millisecond they press Enter.
+2. **Smooth Transition**: It shifts to **"AI is typing..."** as soon as the first stream chunks arrive.
+3. **Submission Guard**: `disabled={status === 'streaming' || status === 'submitted'}` prevents race conditions or double-submitting while the AI is busy.
+
 ---
 
 ## 🛠️ Tech Stack
